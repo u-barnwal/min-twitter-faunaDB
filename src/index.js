@@ -18,13 +18,10 @@ const client = new faunadb.Client({
 const {
   Paginate,
   Get,
-  Select,
   Match,
   Index,
   Create,
   Collection,
-  Lambda,
-  Var,
   Join,
   Ref,
   Call,
