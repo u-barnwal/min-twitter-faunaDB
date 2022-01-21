@@ -27,6 +27,8 @@ const {
   Var,
   Join,
   Ref,
+  Call,
+  Function: Fn,
 } = faunadb.query;
 
 // get tweet by id
@@ -47,12 +49,39 @@ app.post("/tweet", async (req, res) => {
   }
 
   const data = {
-    user: Select("ref", Get(Match(Index("usersByName"), req.body.userName))),
+    user: Call(Fn("getUser"), req.body.userName),
     text: req.body.text,
   };
 
   const doc = await client
     .query(Create(Collection("tweets"), { data }))
+    .catch((e) => {
+      res.send(
+        {
+          error: {
+            description:
+              "Something went wrong! You've probably enter invalid userName",
+          },
+        },
+        500
+      );
+    });
+
+  res.send(doc);
+});
+
+// get all tweet by user
+app.get("/tweet", async (req, res) => {
+  if (!req?.body?.userName) {
+    res.send({ error: { userName: "cannot be empty" } }, 400);
+  }
+
+  const doc = await client
+    .query(
+      Paginate(
+        Match(Index("tweetsByUser"), Call(Fn("getUser"), req.body.userName))
+      )
+    )
     .catch((e) => {
       res.send(
         {
