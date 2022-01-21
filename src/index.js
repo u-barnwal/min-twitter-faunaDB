@@ -130,6 +130,39 @@ app.post("/relationship", async (req, res) => {
   res.send(doc);
 });
 
+// get feed for user
+app.get("/feed", async (req, res) => {
+  if (!req?.body?.userName) {
+    res.send({ error: { userName: "cannot be empty" } }, 400);
+  }
+
+  const doc = await client
+    .query(
+      Paginate(
+        Join(
+          Match(
+            Index("followersByFollowee"),
+            Call(Fn("getUser"), req.body.userName)
+          ),
+          Index("tweetsByUser")
+        )
+      )
+    )
+    .catch((e) => {
+      res.send(
+        {
+          error: {
+            description:
+              "Something went wrong! You've probably enter invalid userName",
+          },
+        },
+        500
+      );
+    });
+
+  res.send(doc);
+});
+
 app.listen(process.env.PORT || 5001, () =>
   console.log("API on http://localhost:5001")
 );
