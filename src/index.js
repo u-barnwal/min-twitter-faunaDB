@@ -1,4 +1,8 @@
-const app = require("express")();
+const express = require("express");
+
+const app = express();
+
+app.use(express.json());
 
 const dotenv = require("dotenv");
 dotenv.config();
@@ -25,8 +29,41 @@ const {
   Ref,
 } = faunadb.query;
 
+// get tweet by id
 app.get("/tweet/:id", async (req, res) => {
   const doc = await client.query(Get(Ref(Collection("tweets"), req.params.id)));
+
+  res.send(doc);
+});
+
+// create tweet for user
+app.post("/tweet", async (req, res) => {
+  if (!req?.body?.userName) {
+    res.send({ error: { userName: "cannot be empty" } }, 400);
+  }
+
+  if (!req?.body?.text) {
+    res.send({ error: { text: "cannot be empty" } }, 400);
+  }
+
+  const data = {
+    user: Select("ref", Get(Match(Index("usersByName"), req.body.userName))),
+    text: req.body.text,
+  };
+
+  const doc = await client
+    .query(Create(Collection("tweets"), { data }))
+    .catch((e) => {
+      res.send(
+        {
+          error: {
+            description:
+              "Something went wrong! You've probably enter invalid userName",
+          },
+        },
+        500
+      );
+    });
 
   res.send(doc);
 });
