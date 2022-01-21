@@ -97,6 +97,39 @@ app.get("/tweet", async (req, res) => {
   res.send(doc);
 });
 
+// create followers for user
+app.post("/relationship", async (req, res) => {
+  if (!req?.body?.follower) {
+    res.send({ error: { follower: "cannot be empty" } }, 400);
+  }
+
+  if (!req?.body?.followee) {
+    res.send({ error: { followee: "cannot be empty" } }, 400);
+  }
+
+  const data = {
+    follower: Call(Fn("getUser"), req.body.follower),
+    followee: Call(Fn("getUser"), req.body.followee),
+  };
+
+  const doc = await client
+    .query(Create(Collection("relationships"), { data }))
+    .catch((e) => {
+      console.log(e);
+      res.send(
+        {
+          error: {
+            description:
+              "Something went wrong! You've probably enter invalid user(s)",
+          },
+        },
+        500
+      );
+    });
+
+  res.send(doc);
+});
+
 app.listen(process.env.PORT || 5001, () =>
   console.log("API on http://localhost:5001")
 );
