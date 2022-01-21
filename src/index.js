@@ -1,9 +1,12 @@
 const app = require("express")();
 
+const dotenv = require("dotenv");
+dotenv.config();
+
 const faunadb = require("faunadb");
 
 const client = new faunadb.Client({
-  secret: "fnAEdfUHCUAAQsTE-EgldKuTkUOlNhw9Nk9Qf3jr",
+  secret: process.env.FAUNA_DB_SECRET,
   domain: "db.us.fauna.com",
   port: 443,
 });
